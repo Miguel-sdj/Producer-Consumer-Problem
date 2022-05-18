@@ -5,7 +5,6 @@
 #include <stdlib.h>
 // codigo feito por Miguel Cabral de Carvalho.
 
-
 // declaração das variáveis globais
 int qtdProducer;
 int qtdConsumer;
@@ -19,18 +18,21 @@ int *bufferArray;
 pthread_mutex_t mutex;
 sem_t empty;
 sem_t full;
+int x = 0;
+int flag = 0;
 
 void producer(void* id){
     int* i = id; // id atual do produtor
     
-    int x = 0;
+    int j = 0;
     while(1){
-        if (x >= 0 && x <= limit){ // condição para a criada do dado
-            x = (2 * x) + 1;
-        } else{
-           x = 0;
-           x = (2 * x) + 1;
+        flag = 0;
+            // printf("J = %d e limite = %d\n", j, limit);
+        if (j == limit){
+            flag = 1;
         }
+        x = (2 * j) + 1;
+        
         sem_wait(&empty);
         pthread_mutex_lock(&mutex);
         
@@ -40,7 +42,13 @@ void producer(void* id){
 
         pthread_mutex_unlock(&mutex);
         sem_post(&full);
+        
+        j++;
+        if (flag == 1){
+            j = 0;
+        }
         sleep(1);
+        
     }
 
 }
@@ -55,9 +63,10 @@ void consumer(void* id){
         x = bufferArray[buffer_out];
         printf("Consumidor %d consumindo %d na posição %d\n", *i, x, buffer_out);
         buffer_out = (buffer_out + 1) % buffer_size;
-        sleep(1);
+        
         pthread_mutex_unlock(&mutex);
         sem_post(&empty);
+        sleep(1);
         
     }
 }
